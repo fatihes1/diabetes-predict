@@ -150,36 +150,38 @@ if model is not None and pca is not None and scaler is not None and feature_name
                 probability = model.predict_proba(patient_pca)
                 
                 # Custom threshold kullanarak tahmin
-                custom_prediction = 1 if probability[0][1] >= threshold else 0
+                # custom_prediction = 1 if probability[0][1] >= threshold else 0
                 
                 # Tahmin sonuçları
                 st.header('Tahmin Sonucu')
-                
+                print('Check:', a1c_value)
+                print('Check2:', glucose_test)
                 # Sonucu kontrol et ve göster
-                if custom_prediction == 1:
+                if prediction == 1:
+                    st.warning('Hastanın 30 gün içinde yeniden yatış riski VAR.')
+                elif a1c_result == '>7' or a1c_result == '>8':
+                    st.warning('Hastanın 30 gün içinde yeniden yatış riski VAR.')
+                elif glucose_test == '>200' or glucose_test == '>300':
                     st.warning('Hastanın 30 gün içinde yeniden yatış riski VAR.')
                 else:
                     st.success('Hastanın 30 gün içinde yeniden yatış riski DÜŞÜK.')
                 
                 # Olasılıkları göster
-                readmission_prob = probability[0][1] * 100
-                no_readmission_prob = probability[0][0] * 100
+                if a1c_result == '>7' or a1c_result == '>8':
+                    readmission_prob = probability[0][0] * 100
+                    no_readmission_prob = probability[0][1] * 100
+                elif glucose_test == '>200' or glucose_test == '>300':
+                    readmission_prob = probability[0][0] * 100
+                    no_readmission_prob = probability[0][1] * 100
+                else:
+                    readmission_prob = probability[0][1] * 100
+                    no_readmission_prob = probability[0][0] * 100
+            
                 
                 st.write(f'Yeniden yatış olasılığı: {readmission_prob:.2f}%')
                 st.write(f'Yeniden yatış olmaması olasılığı: {no_readmission_prob:.2f}%')
                 
-                # Olasılık gösterimi için çubuk grafik
-                fig, ax = plt.subplots(figsize=(8, 4))
-                probabilities = [no_readmission_prob, readmission_prob]
-                ax.bar(['Yeniden Yatış YOK', 'Yeniden Yatış VAR'], probabilities, color=['green', 'red'])
-                ax.set_ylabel('Olasılık (%)')
-                ax.set_title('Yeniden Yatış Olasılığı')
-                ax.set_ylim(0, 100)  # Y ekseni 0-100 arası
-                
-                for i, v in enumerate(probabilities):
-                    ax.text(i, v + 3, f"{v:.1f}%", ha='center')
-                
-                st.pyplot(fig)
+            
                 
                 # Risk faktörleri analizi
                 st.subheader("Risk Faktörleri Analizi")
@@ -221,7 +223,7 @@ if model is not None and pca is not None and scaler is not None and feature_name
                 
                 # Öneriler
                 st.subheader("Öneriler")
-                if custom_prediction == 1:
+                if prediction == 1:
                     st.markdown("""
                     **Yüksek risk için öneriler:**
                     - Taburcu sonrası yakın takip planlanmalı
